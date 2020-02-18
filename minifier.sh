@@ -29,6 +29,7 @@ helpTest () {
 
 helpTest
 HELP_MSG='Enter "./minifier.sh --help" for more information.'
+
 # Test if the option are given only once as script's parameter; if not exit the program #
 optionTestUnique () {
     if [ -z $1 ]; then
@@ -36,6 +37,14 @@ optionTestUnique () {
     else    
         echo "ERROR : The options must be unique\n$HELP_MSG "
         exit 1
+    fi
+}
+
+# Test if the tags file can be write and read by the user #
+tagFileTest () {
+    if ! [ -f $1 ] || ! [ -r $1 ] || ! [ -w $1 ]; then 
+        echo "The tags file must be a modifiable text file.\n$HELP_MSG"
+        exit 2
     fi
 }
 
@@ -81,7 +90,10 @@ for I in $*; do
 
         * )
             if [ -e $I ]; then
-                if [ -z $ARG_SRC ]; then
+                if ! [ -z $ARG_T ] && [ -z $ARG_TAG ]; then 
+                    ARG_TAG=$I
+                    tagFileTest $ARG_TAG
+                elif [ -z $ARG_SRC ]; then
                     ARG_SRC=$I
                 else
                     ARG_DEST=$I
@@ -90,22 +102,28 @@ for I in $*; do
             else
                 if [ -z $ARG_SRC ]; then 
                     echo "The source must be an existing file\n$HELP_MSG"
-                    exit 2
+                    exit 3
                 elif [ -z $ARG_DEST ]; then
                     ARG_DEST=$I
                 else
                     echo "The '$I' option is not supported\n$HELP_MSG"
-                    exit 3
+                    exit 4
                 fi
             fi
         ;;
     esac
 done
 
+# Test if the tags file if given after the -t option #
+if ! [ -z $ARG_T ] && [ -z $ARG_TAG ]; then 
+    echo "The -t option must be followed by a path to an existing text file\n$HELP_MSG" 
+    exit 5   
+fi
+
 # Test if both source and destination are specified #
 if [ -z $ARG_SRC ] || [ -z $ARG_DEST ]; then
     echo "Paths to 'dir_source' and 'dir_dest' directories must be specified\n$HELP_MSG"
-    exit 4
+    exit 6
 fi
 # Ask the user to confirm that an already existing destination is to overwrite #
 if ! [ -z $DEST_EXISTS ] && [ -z $ARG_F ]; then 
@@ -114,8 +132,9 @@ if ! [ -z $DEST_EXISTS ] && [ -z $ARG_F ]; then
         echo "$ARG_DEST already exists - Are you sure you want to overwrite it ? [y/n]"
         read OVERWRITE
     done
-    if [ $OVERWRITE = y ]; then 
-        ARG_F=true
+    if [ $OVERWRITE = n ]; then 
+        exit 0
     fi
+    $ARG_F=true
 fi
 echo "$ARG_CSS $ARG_F $ARG_T $ARG_SRC $ARG_DEST"
