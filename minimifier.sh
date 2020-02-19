@@ -8,4 +8,4 @@
 DEST_FOLDER=result
 
 # CSS minifier
-tr -s '\n' ' ' < $1 | sed -r -e 's/[ ]*\/\*[^\/]+\/[ ]*//g' -e 's/\r|\t|\v//g' -e 's/[ ]*(:|;|,|\{|\}|>)[ ]*/\1/g' > $DEST_FOLDER/$1
+tr -s '\n' ' ' < $1 | perl -pe 's/\/\*.*?\*\///g' | sed -r -e 's/\r|\t|\v//g' -e 's/[ ]*(:|;|,|\{|\}|>)[ ]*/\1/g' > $DEST_FOLDER/$1
