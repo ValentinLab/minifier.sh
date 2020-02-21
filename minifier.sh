@@ -1,6 +1,8 @@
 #!/bin/dash
 
-HELP_MSG='Enter "./minifier.sh --help" for more information.'
+# -------------------------------------------------- #
+# DISPLAY HELP                                       #
+# -------------------------------------------------- #
 
 # Print a message to explain how to use this script
 help () {
@@ -27,7 +29,13 @@ helpTest () {
   fi
 }
 
+helpTest $@
 
+# -------------------------------------------------- #
+# CHECK ARGUMENTS                                    #
+# -------------------------------------------------- #
+
+HELP_MSG='Enter "./minifier.sh --help" for more information.'
 
 # Test if the option are given only once as script's parameter; if not exit the program
 optionTestUnique () {
@@ -57,7 +65,7 @@ tagsFileExist () {
   fi
 }
 
-# Test if both source and destination are specified and are different #
+# Test if both source and destination are specified and are different
 pathsTest () {
   if [ -z $ARG_SRC ] || [ -z $ARG_DEST ]; then
     echo "Paths to 'dir_source' and 'dir_dest' directories must be specified\n$HELP_MSG"
@@ -70,7 +78,7 @@ pathsTest () {
   fi
 }
 
-# Ask the user to confirm that an already existing destination is to overwrite #
+# Ask the user to confirm that an already existing destination is to overwrite
 userConfirmDelete () {
   if ! [ -z $DEST_EXISTS ] && [ -z $ARG_F ]; then
     OVERWRITE=0
@@ -85,10 +93,7 @@ userConfirmDelete () {
   fi
 }
 
-# Display help
-help $@
-
-# Test if the arguments are valid  #
+# Test if the arguments are valid
 ARG_SRC=''
 ARG_DEST=''
 for I in $*; do
@@ -158,3 +163,24 @@ tagsFileExist
 pathsTest
 userConfirmDelete
 
+# -------------------------------------------------- #
+# HTML MINIFIER                                      #
+# -------------------------------------------------- #
+
+minifierHTML () {
+  tr -s '\n' ' ' < $1 | perl -pe 's/<!--.*?-->//g' | sed -r 's/\r|\t|\v//g' > $ARG_DEST/$1
+
+  if ! [ -z $ARG_TAG ] ; then
+    for T in $TAGS ; do
+      cat $ARG_DEST/$1 | sed -r -e "s/[ ]*<$T([^>]*)>[ ]*/<$T\1>/gI" -e "s/[ ]*<\/$T>[ ]*/<\/$T>/gI" > $ARG_DEST/$1
+    done
+  fi
+}
+
+# -------------------------------------------------- #
+# CSS MINIFIER                                       #
+# -------------------------------------------------- #
+
+minifierCSS () {
+  tr -s '\n' ' ' < $1 | perl -pe 's/\/\*.*?\*\///g' | sed -r -e 's/\r|\t|\v//g' -e 's/[ ]*(:|;|,|\{|\}|>)[ ]*/\1/g' > $ARG_DEST/$1
+}
