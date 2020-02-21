@@ -6,19 +6,23 @@
 
 # Print a message to explain how to use this script
 help () {
-    echo 'usage : ./minifier.sh [OPTION]... dir_source dir_dest\n
-    Minifies HTML and/or CSS files with :
-    dir_source   path to the root directory of the website to be minified
-    dir_dest     path to the root directory of the minified website
-    OPTIONS
-        --help       show help and exit
-        -v           displays the list of minified files; and for eachfile, its final and initial sizes, and its reductionpercentage
-        -f           if the dir_dest file exists, its content isremoved without asking for confirmation of deletion
-        --css        CSS files are minified
-        --html       HTML files are minified
-        if none of the 2 previous options is present, the HTML and CSSfiles are minified\n
-        -t tags_file the "white space" characters preceding and following the
-                     tags (opening or closing) listed in the "tags_file" are deleted'
+    echo 'usage : ./minifier.sh [OPTION]... dir_source dir_dest
+
+Minifies HTML and/or CSS files with :
+  dir_source   path to the root directory of the website to be minified
+  dir_dest     path to the root directory of the minified website
+  
+OPTIONS
+  --help    show help and exit
+  -v            displays the list of minified files; and for eachfile, its final and
+                initial sizes, and its reductionpercentage
+  -f            if the dir_dest file exists, its content isremoved without asking
+                for confirmation of deletion
+  --css         CSS files are minified
+  --html        HTML files are minified
+  if none of the 2 previous options is present, the HTML and CSSfiles are minified
+  -t            tags_file the "white space" characters preceding and following the
+                tags (opening or closing) listed in the "tags_file" are deleted'
 }
 
 # Test if the --help argument is alone
@@ -217,3 +221,7 @@ minifierCSS () {
     getSize $1 $ARG_DEST/$1
   fi
 }
+
+# -------------------------------------------------- #
+# MINIFIER                                           #
+# -------------------------------------------------- #
