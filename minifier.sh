@@ -164,6 +164,31 @@ pathsTest
 userConfirmDelete
 
 # -------------------------------------------------- #
+# GET FILES                                          #
+# -------------------------------------------------- #
+
+getType () {
+  TYPE_FILE=$(basename $1)
+  TYPE_FILE=${TYPE_FILE##*.}
+}
+
+# -------------------------------------------------- #
+# VERBOSE                                            #
+# -------------------------------------------------- #
+
+getSize () {
+  $FIRST=$(stat --format=%s $1)
+  $SECOND=$(stat --format=%s $2)
+
+  $DIFFERENCE=$(($(($SECOND/$FIRST))*100))
+
+  getType $1
+  echo "FILE : $1 --> $FIRST / $SECOND : $DIFFERENCE %"
+}
+
+getType $1/html/redaction.html
+
+# -------------------------------------------------- #
 # HTML MINIFIER                                      #
 # -------------------------------------------------- #
 
@@ -175,6 +200,10 @@ minifierHTML () {
       cat $ARG_DEST/$1 | sed -r -e "s/[ ]*<$T([^>]*)>[ ]*/<$T\1>/gI" -e "s/[ ]*<\/$T>[ ]*/<\/$T>/gI" > $ARG_DEST/$1
     done
   fi
+
+  if [ $ARG_V -eq "true "] ; then
+    getSize $1 $ARG_DEST/$1
+  fi
 }
 
 # -------------------------------------------------- #
@@ -183,4 +212,8 @@ minifierHTML () {
 
 minifierCSS () {
   tr -s '\n' ' ' < $1 | perl -pe 's/\/\*.*?\*\///g' | sed -r -e 's/\r|\t|\v//g' -e 's/[ ]*(:|;|,|\{|\}|>)[ ]*/\1/g' > $ARG_DEST/$1
+
+  if [ $ARG_V -eq "true "] ; then
+    getSize $1 $ARG_DEST/$1
+  fi
 }
