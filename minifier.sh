@@ -94,6 +94,7 @@ userConfirmDelete () {
       exit 0
     fi
     ARG_F=true
+    rm -rf $ARG_DEST
   fi
 }
 
@@ -142,21 +143,26 @@ for I in $*; do
           if ! [ -z $ARG_T ] && [ -z $ARG_TAG ]; then
             ARG_TAG=$I
             tagFileTest $ARG_TAG
-          elif [ -z $ARG_SRC ]; then
-              ARG_SRC=$I
+          elif  [ -z $ARG_SRC ]; then
+            if [ -f $I ]; then
+              echo "The source must be a directory\n$HELP_MSG"
+              exit 3
+            fi
+            ARG_SRC=${I#*./}
+            echo $ARG_SRC  
           else
-              ARG_DEST=$I
-              DEST_EXISTS=true
+            ARG_DEST=${I#*./}
+            DEST_EXISTS=true
           fi
         else
           if [ -z $ARG_SRC ]; then 
             echo "The source must be an existing file\n$HELP_MSG"
-            exit 3
+            exit 4
           elif [ -z $ARG_DEST ]; then
-            ARG_DEST=$I
+            ARG_DEST=${I#*./}
           else
             echo "The '$I' option is not supported\n$HELP_MSG"
-            exit 4
+            exit 5
           fi
         fi
         ;;
@@ -166,7 +172,11 @@ done
 tagsFileExist
 pathsTest
 userConfirmDelete
-
+# If none of the --css and --html arguments are passed, both types must be minified
+if [ -z $ARG_CSS ] && [ -z $ARG_HTML ]; then 
+  ARG_CSS=true
+  ARG_HTML=true
+fi
 # -------------------------------------------------- #
 # GET FILES                                          #
 # -------------------------------------------------- #
@@ -181,32 +191,30 @@ getType () {
 # -------------------------------------------------- #
 
 getSize () {
-  $FIRST=$(stat --format=%s $1)
-  $SECOND=$(stat --format=%s $2)
+  FIRST=$(stat --format=%s $1)
+  SECOND=$(stat --format=%s $2)
 
-  $DIFFERENCE=$(($(($SECOND/$FIRST))*100))
+  DIFFERENCE=$((100-$(($(($SECOND*100))/$FIRST))))
 
-  getType $1
-  echo "FILE : $1 --> $FIRST / $SECOND : $DIFFERENCE %"
+  echo "FILE $3 : $1 --> $SECOND / $FIRST : $DIFFERENCE %"
 }
-
-getType $1/html/redaction.html
 
 # -------------------------------------------------- #
 # HTML MINIFIER                                      #
 # -------------------------------------------------- #
 
 minifierHTML () {
-  tr -s '\n' ' ' < $1 | perl -pe 's/<!--.*?-->//g' | sed -r 's/\r|\t|\v//g' > $ARG_DEST/$1
+  tr -s '\n' ' ' < $1 | perl -pe 's/<!--.*?-->//g' | sed -r 's/\r|\t|\v//g' > $2
 
   if ! [ -z $ARG_TAG ] ; then
+    HTML_F=$(cat $2)
     for T in $TAGS ; do
-      cat $ARG_DEST/$1 | sed -r -e "s/[ ]*<$T([^>]*)>[ ]*/<$T\1>/gI" -e "s/[ ]*<\/$T>[ ]*/<\/$T>/gI" > $ARG_DEST/$1
+      echo $HTML_F | sed -r -e "s/[ ]*<$T([^>]*)>[ ]*/<$T\1>/gI" -e "s/[ ]*<\/$T>[ ]*/<\/$T>/gI" > $2
     done
   fi
 
-  if [ $ARG_V -eq "true "] ; then
-    getSize $1 $ARG_DEST/$1
+  if ! [ -z $ARG_V  ] ; then
+    getSize $1 $2 HTML
   fi
 }
 
@@ -215,13 +223,37 @@ minifierHTML () {
 # -------------------------------------------------- #
 
 minifierCSS () {
-  tr -s '\n' ' ' < $1 | perl -pe 's/\/\*.*?\*\///g' | sed -r -e 's/\r|\t|\v//g' -e 's/[ ]*(:|;|,|\{|\}|>)[ ]*/\1/g' > $ARG_DEST/$1
+  tr -s '\n' ' ' < $1 | perl -pe 's/\/\*.*?\*\///g' | sed -r -e 's/\r|\t|\v//g' -e 's/[ ]*(:|;|,|\{|\}|>)[ ]*/\1/g' > $2
 
-  if [ $ARG_V -eq "true "] ; then
-    getSize $1 $ARG_DEST/$1
+  if ! [ -z $ARG_V ] ; then
+    getSize $1 $2 CSS
   fi
+}
+
+createDestDir () {
+  local CONTENT=${1%*/}/*
+  for I in $CONTENT; do 
+
+    if [ -d $I ]; then 
+      createDestDir $I
+    else 
+      getType $I
+      if [ -n "$ARG_CSS" ]; then
+        if [ $TYPE_FILE = 'css' ]; then
+          minifierCSS $ARG_SRC/${I#*/} $I
+        fi  
+      fi
+      if [ -n "$ARG_HTML" ]; then
+        if [ $TYPE_FILE = 'html' ]; then
+          minifierHTML $ARG_SRC/${I#*/} $I
+        fi
+      fi
+    fi
+  done
 }
 
 # -------------------------------------------------- #
 # MINIFIER                                           #
 # -------------------------------------------------- #
+cp -r $ARG_SRC $ARG_DEST
+createDestDir $ARG_DEST
