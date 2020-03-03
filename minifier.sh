@@ -5,6 +5,7 @@
 # -------------------------------------------------- #
 
 # Print a message to explain how to use this script
+# Parameters : none
 help () {
     echo 'usage : ./minifier.sh [OPTION]... dir_source dir_dest
 
@@ -26,6 +27,7 @@ OPTIONS
 }
 
 # Test if the --help argument is alone
+# Parameters : The string composed by all the parameters of the script's call
 helpTest () {
   if [ $# -eq 1 ]  && [ $1 = "--help" ]; then
     help
@@ -42,6 +44,7 @@ helpTest $@
 HELP_MSG='Enter "./minifier.sh --help" for more information.'
 
 # Test if the option are given only once as script's parameter; if not exit the program
+# Parameters : The script's parameters to test
 optionTestUnique () {
   if [ -z $1 ]; then
     return 0
@@ -51,17 +54,19 @@ optionTestUnique () {
   fi
 }
 
-# Test if the tags file can be write and read by the user
+# Test if the tags file can be modifiable (write and read) by the user,
+# then store its content in a variable
+# Parameters : none
 tagFileTest () {
-  if ! [ -f $1 ] || ! [ -r $1 ] || ! [ -w $1 ]; then 
+  if ! [ -f $ARG_TAG ] || ! [ -r $ARG_TAG ] || ! [ -w $ARG_TAG ]; then 
     echo "The tags file must be a modifiable text file.\n$HELP_MSG"
     exit 2
   fi 
-  # Store the tags file's content in a variable
   TAGS=$(cat $ARG_TAG) 
 }
 
 # Test if the tags file if given after the -t option
+# Parameters : none
 tagsFileExist () {
   if ! [ -z $ARG_T ] && [ -z $ARG_TAG ]; then 
     echo "The -t option must be followed by a path to an existing text file\n$HELP_MSG" 
@@ -70,6 +75,7 @@ tagsFileExist () {
 }
 
 # Test if both source and destination are specified and are different
+# Parameters : none
 pathsTest () {
   if [ -z $ARG_SRC ] || [ -z $ARG_DEST ]; then
     echo "Paths to 'dir_source' and 'dir_dest' directories must be specified\n$HELP_MSG"
@@ -83,6 +89,7 @@ pathsTest () {
 }
 
 # Ask the user to confirm that an already existing destination is to overwrite
+# Parameters : none
 userConfirmDelete () {
   if ! [ -z $DEST_EXISTS ] && [ -z $ARG_F ]; then
     OVERWRITE=0
@@ -98,7 +105,9 @@ userConfirmDelete () {
   fi
 }
 
-# Test if the arguments are valid
+# -------------------------------------------------- #
+# Main Arguments' validity test                      #
+# -------------------------------------------------- #
 ARG_SRC=''
 ARG_DEST=''
 for I in $*; do
@@ -142,7 +151,7 @@ for I in $*; do
         if [ -e $I ]; then
           if ! [ -z $ARG_T ] && [ -z $ARG_TAG ]; then
             ARG_TAG=$I
-            tagFileTest $ARG_TAG
+            tagFileTest 
           elif  [ -z $ARG_SRC ]; then
             if [ -f $I ]; then
               echo "The source must be a directory\n$HELP_MSG"
@@ -172,6 +181,7 @@ done
 tagsFileExist
 pathsTest
 userConfirmDelete
+
 # If none of the --css and --html arguments are passed, both types must be minified
 if [ -z $ARG_CSS ] && [ -z $ARG_HTML ]; then 
   ARG_CSS=true
@@ -181,6 +191,8 @@ fi
 # GET FILES                                          #
 # -------------------------------------------------- #
 
+# Get the extension of the parameters
+# Parameters : One file
 getType () {
   TYPE_FILE=$(basename $1)
   TYPE_FILE=${TYPE_FILE##*.}
@@ -190,6 +202,9 @@ getType () {
 # VERBOSE                                            #
 # -------------------------------------------------- #
 
+# Compute the difference of size of the two files in parameters, then display 
+# it with a message for the user
+# Parameters : The 2 files to compare
 getSize () {
   FIRST=$(stat --format=%s $1)
   SECOND=$(stat --format=%s $2)
@@ -203,6 +218,8 @@ getSize () {
 # HTML MINIFIER                                      #
 # -------------------------------------------------- #
 
+# Minify the html file given in parameter
+# Arguments : 1 html file
 minifierHTML () {
   tr -s '\n' ' ' < $1 | perl -pe 's/<!--.*?-->//g' | sed -r 's/\r|\t|\v//g' > $2
 
@@ -222,6 +239,8 @@ minifierHTML () {
 # CSS MINIFIER                                       #
 # -------------------------------------------------- #
 
+# Minify the css file given in parameter
+# Arguments : 1 css file
 minifierCSS () {
   tr -s '\n' ' ' < $1 | perl -pe 's/\/\*.*?\*\///g' | sed -r -e 's/\r|\t|\v//g' -e 's/[ ]*(:|;|,|\{|\}|>)[ ]*/\1/g' > $2
 
@@ -230,6 +249,13 @@ minifierCSS () {
   fi
 }
 
+# -------------------------------------------------- #
+# Creation of the destination's folder tree          #
+# -------------------------------------------------- #
+
+# Create recursively the tree structure for the destination folder, 
+# then minify the html and css files in it
+# Parameters : none
 createDestDir () {
   local CONTENT=${1%*/}/*
   for I in $CONTENT; do 
