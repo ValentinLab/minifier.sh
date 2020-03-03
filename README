@@ -1,17 +1,33 @@
-Binôme : PERIGNON Valentin, DEVEL Fabian
- 
-Bilan du projet : 
-    Objectifs demandés atteints, les fichiers css et html d'une arborescence données sont correctement minifiés avec toutes les fonctionnalités demandées.
+Système et programmation système : projet shell
+===============================================
 
-    Fonctionnalités non demandées : support des arguments même s'ils sont placés entre ou après les chemins aux source et destination. Si trop de chemin de fichiers sont donnés mais tout en respectant les contraintes d'ordre des arguments, alors prises en compte du dernier donné pour la destination et éxecution normale du programme.
+## Noms du binôme
+* Fabian Devel
+* Valentin Perignon
 
-    Amélioration possible : support des arguments multiple (ex: -vft)
+## Bilan sur le produit final
+Les objectifs demandés ont été atteints. Le programme shell est capable
+de minifier fichiers HTML et CSS correctement.
+Fonctionnalités non demandées :
+ * Pour rendre l'outil plus simple à utiliser, les arguments peuvent être
+   placés avant, après ou entre les fichiers de source et destination.
 
-Bilan technique : 
-    Système d'exploitation utilisé : wsl ubuntu / Arch Linux / macOS
-    Editeur : Visual Studio Code
-    Partage de fichiers : Github
+## Bilan technique
+Voici la liste des différents outils utilisés :
+* OS : WSL Ubuntu (F. Devel) et Arch Linux (V. Perignon)
+* Editeur : Visual Studio Code
+* Outil de versioning : git
+Nous avons également passé beaucoup de temps à consulter le man.
 
-Bilan travail en binôme : 
-    Projet qui s'est bien déroulé avec un partage clair et consentis par les deux membres de la charge de travail. Communication simple et suffisante.
-    Binôme habitué à travailler ensemble
+## Améliorations possibles
+Dans la version actuelle, les paramètres doivent être séparés (exemple : -v -t).
+Nous pourrions ajouter la possibilité de les unifier (exemple : -vt)
+Il serait également possible d'ajouter le support d'autres langages tels que
+PHP.
+
+## Travail en binôme
+Dès le début du projet, nous avons souhaité diviser le travail en tâches et non
+travailler sur un seul et même poste pour être plus efficace. Le travail a été
+réparti de manière égale entre les deux membres.
+Le binôme est habitué à travailler ensemble, l'ensemble du travail s'est
+correctement déroulé.
