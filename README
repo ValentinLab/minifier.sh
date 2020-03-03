@@ -1,0 +1,17 @@
+Binôme : PERIGNON Valentin, DEVEL Fabian
+ 
+Bilan du projet : 
+    Objectifs demandés atteints, les fichiers css et html d'une arborescence données sont correctement minifiés avec toutes les fonctionnalités demandées.
+
+    Fonctionnalités non demandées : support des arguments même s'ils sont placés entre ou après les chemins aux source et destination. Si trop de chemin de fichiers sont donnés mais tout en respectant les contraintes d'ordre des arguments, alors prises en compte du dernier donné pour la destination et éxecution normale du programme.
+
+    Amélioration possible : support des arguments multiple (ex: -vft)
+
+Bilan technique : 
+    Système d'exploitation utilisé : wsl ubuntu / Arch Linux / macOS
+    Editeur : Visual Studio Code
+    Partage de fichiers : Github
+
+Bilan travail en binôme : 
+    Projet qui s'est bien déroulé avec un partage clair et consentis par les deux membres de la charge de travail. Communication simple et suffisante.
+    Binôme habitué à travailler ensemble
