@@ -1,7 +1,12 @@
 html
 head
+title
+meta
+link
+script
 body
 header
+footer
 nav
 main
 footer
@@ -15,3 +20,13 @@ h4
 h5
 h6
 p
+form
+thead
+tbody
+tfooter
+tr
+td
+th
+input
+ul
+li
