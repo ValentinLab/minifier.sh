@@ -42,11 +42,12 @@ showHelp $@
 HELP_MSG='Enter "./minifier.sh --help" for more information.'
 
 #
-# Test if the option are given only once as script's parameter
+# Test if the option is given only once as script's parameter
 # if not exit the program
 # Parameters: a script call parameter
 #
 optionTestUnique () {
+  # Test if the option is empty (not already set to true)
   if [ -z $1 ]; then
     return 0
   else
@@ -88,22 +89,22 @@ pathsTest () {
   if [ -z $ARG_SRC ] || [ -z $ARG_DEST ]; then
     echo "Paths to 'dir_source' and 'dir_dest' directories must be specified\n$HELP_MSG"
     exit 6
-  else 
-    if [ $ARG_SRC = $ARG_DEST ]; then
-      echo "'The paths dir_source' and 'dir_dest' must be different.\n$HELP_MSG"
-      exit 7
-    fi
+  elif [ $ARG_SRC = $ARG_DEST ]; then
+    echo "'The paths dir_source' and 'dir_dest' must be different.\n$HELP_MSG"
+    exit 7
   fi
 }
 
 #
 # Ask the user to confirm that an already existing destination is to overwrite
+# only if the -f option is not present
 # Parameters: none
 #
 userConfirmDelete () {
   if ! [ -z $DEST_EXISTS ] && [ -z $ARG_F ]; then
     echo -n "Do you want to remove ’$ARG_DEST’ ? [y/n] "
     read OVERWRITE
+    # Leave script if the answer is different from y
     if [ "$OVERWRITE" != y ]; then
       exit 0
     fi
@@ -115,46 +116,54 @@ userConfirmDelete () {
 # MAIN ARGUMENTS VALIDITY TEST                       #
 # -------------------------------------------------- #
 
+# Check all arguments
 ARG_SRC=''
 ARG_DEST=''
 for I in $*; do
   case $I in
+    # Verbose option
     '-v' )
       if optionTestUnique $ARG_V; then
         ARG_V=true
       fi
       ;;
 
+      # Force option
     '-f' )
       if optionTestUnique $ARG_F; then
         ARG_F=true
       fi
       ;;
 
+    # CSS minifier option
     '--css' )
       if optionTestUnique $ARG_CSS; then
         ARG_CSS=true
       fi
       ;;
 
+    # HTML minifier option
     '--html' )
       if optionTestUnique $ARG_HTML; then
         ARG_HTML=true
       fi
       ;;
 
+    # PHP minifier option
     '--php' )
       if optionTestUnique $ARG_PHP; then
         ARG_PHP=true
       fi
       ;;
 
+    # Tags file option
     '-t' )
       if optionTestUnique $ARG_T; then
         ARG_T=true
       fi
       ;;
 
+      # Other options: path file, not supported option
       * )
         if [ -e "$I" ]; then
           I=${I#./*}
@@ -190,7 +199,7 @@ tagsFileExist
 pathsTest
 userConfirmDelete
 
-# If none of the --css and --html arguments are passed, both types must be minified
+# If none of the --css, --html and --php arguments are passed, all types must be minified
 if [ -z $ARG_CSS ] && [ -z $ARG_HTML ] && [ -z $ARG_PHP ]; then 
   ARG_CSS=true
   ARG_HTML=true
@@ -232,6 +241,19 @@ getSize () {
 # -------------------------------------------------- #
 
 #
+# Remove html tags
+# Parameters: html filename
+#
+removeTags () {
+  if ! [ -z $ARG_TAG ] ; then
+    for T in $TAGS ; do
+      HTML_DATA=$(cat $1)
+      echo $HTML_DATA | sed -r -e "s/[ ]*(<$T[^>]*>)[ ]*/\1/gI" -e "s/[ ]*(<\/$T>)[ ]*/\1/gI" > $1
+    done
+  fi
+}
+
+#
 # Minify a html file
 # Parameters: html filename
 #
@@ -239,12 +261,7 @@ minifierHTML () {
   tr '\n' ' ' < $1 | tr -s ' ' | perl -pe 's/<!--.*?-->//g' | sed -r 's/\r|\t|\v//g' > $2
 
   # Use tags file if the option -t is set
-  if ! [ -z $ARG_TAG ] ; then
-    for T in $TAGS ; do
-      HTML_DATA=$(cat $2)
-      echo $HTML_DATA | sed -r -e "s/[ ]*(<$T[^>]*>)[ ]*/\1/gI" -e "s/[ ]*(<\/$T>)[ ]*/\1/gI" > $2
-    done
-  fi
+  removeTags $2
 
   # Print size if the option -v is set
   if ! [ -z $ARG_V  ] ; then
@@ -276,13 +293,9 @@ minifierCSS () {
 minifierPHP () {
   sed -r 's/^[ |\t]*\/\/.*//' $1 | tr '\n' ' ' | tr -s ' ' | perl -pe 's/<!--.*?-->//g' | perl -pe 's/\/\*.*?\/\*//g' | sed -r 's/\r|\t|\v//g' > $2
 
+  # Php can contains html
   # Use tags file if the option -t is set
-  if ! [ -z $ARG_TAG ] ; then
-    for T in $TAGS ; do
-      HTML_DATA=$(cat $2)
-      echo $HTML_DATA | sed -r -e "s/[ ]*(<$T[^>]*>)[ ]*/\1/gI" -e "s/[ ]*(<\/$T>)[ ]*/\1/gI" > $2
-    done
-  fi
+  removeTags $2
 
   # Print size if the option -v is set
   if ! [ -z $ARG_V ] ; then
@@ -296,6 +309,7 @@ minifierPHP () {
 
 #
 # Minify html and css files in a directory
+# Reproduce the source file tree
 # Parameters: a directory name
 #
 minifyAll () {
