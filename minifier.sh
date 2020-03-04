@@ -216,7 +216,7 @@ getSize () {
 
   DIFFERENCE=$((100-$(($(($SECOND*100))/$FIRST))))
 
-  echo "File $3 : $1 --> $SECOND / $FIRST : $DIFFERENCE %"
+  echo "File $3 : $2 --> $SECOND / $FIRST : $DIFFERENCE %"
 }
 
 # -------------------------------------------------- #
@@ -282,7 +282,7 @@ minifyAll () {
       if ! [ -z $ARG_CSS ] && [ "$TYPE_FILE" = css ] ; then
         minifierCSS $I $DEST_FILE
       fi
-      if ! [ -z $ARG_HTML ] && [ $TYPE_FILE = html ] ; then
+      if ! [ -z $ARG_HTML ] && [ "$TYPE_FILE" = html ] ; then
         minifierHTML $I $DEST_FILE
       fi
     fi
