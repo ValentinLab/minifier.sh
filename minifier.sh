@@ -270,26 +270,24 @@ minifierCSS () {
 # Parameters: a directory name
 #
 minifyAll () {
-  local CONTENT=${1%*/}/*
-
-  for I in $CONTENT; do
-    if [ -d $I ]; then
+  local CONTENT=$1/*
+  
+  for I in $CONTENT ; do
+    DEST_FILE=$ARG_DEST/${I#$ARG_SRC/*}
+    if [ -d $I ] ; then
+      mkdir $DEST_FILE
       minifyAll $I
-    else 
+    else
       getType $I
-      if [ -n "$ARG_CSS" ]; then
-        if [ "$TYPE_FILE" = css ]; then
-          minifierCSS $ARG_SRC/${I#*/} $I
-        fi
+      if ! [ -z $ARG_CSS ] && [ "$TYPE_FILE" = css ] ; then
+        minifierCSS $I $DEST_FILE
       fi
-      if [ -n "$ARG_HTML" ]; then
-        if [ "$TYPE_FILE" = html ]; then
-          minifierHTML $ARG_SRC/${I#*/} $I
-        fi
+      if ! [ -z $ARG_HTML ] && [ $TYPE_FILE = html ] ; then
+        minifierHTML $I $DEST_FILE
       fi
     fi
   done
 }
 
-cp -r $ARG_SRC $ARG_DEST
-minifyAll $ARG_DEST
+mkdir $ARG_DEST
+minifyAll $ARG_SRC
