@@ -11,6 +11,8 @@ de minifier fichiers HTML et CSS correctement.
 Fonctionnalités non demandées :
   * Pour rendre l'outil plus simple à utiliser, les arguments peuvent être
     placés avant, après ou entre les fichiers de source et destination.
+  * Il est possible de coller les arguments d'une seule lettre, par exemple
+    -a -b peut être écrit -ab
   * Il est possible de minifier un fichier PHP
 
 ## Bilan technique
@@ -21,8 +23,7 @@ Voici la liste des différents outils utilisés :
 Nous avons également passé beaucoup de temps à consulter le man.
 
 ## Améliorations possibles
-Dans la version actuelle, les paramètres doivent être séparés (exemple : -v -t).
-Nous pourrions ajouter la possibilité de les unifier (exemple : -vt)
+Nous pourrions ajouter la possibilité de minifier d'autres langages comme JavaScript
 
 ## Travail en binôme
 Dès le début du projet, nous avons souhaité diviser le travail en tâches et non

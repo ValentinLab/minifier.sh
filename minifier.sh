@@ -116,84 +116,106 @@ userConfirmDelete () {
 # MAIN ARGUMENTS VALIDITY TEST                       #
 # -------------------------------------------------- #
 
+#
+# Cut glued arguments
+# e.g. -ab become -a -b
+# Parameters: glued arguments
+#
+cutArguments () {
+  ARGS_SIZE=$(($(echo $1 | wc -m)-1))
+  for I in $(seq 2 $ARGS_SIZE); do
+    ARGUMENTS="-$(echo $1 | cut -c $I) $ARGUMENTS"
+  done
+  checkArguments $ARGUMENTS
+}
+
+#
 # Check all arguments
-ARG_SRC=''
-ARG_DEST=''
-for I in $*; do
-  case $I in
-    # Verbose option
-    '-v' )
-      if optionTestUnique $ARG_V; then
-        ARG_V=true
-      fi
-      ;;
-
-      # Force option
-    '-f' )
-      if optionTestUnique $ARG_F; then
-        ARG_F=true
-      fi
-      ;;
-
-    # CSS minifier option
-    '--css' )
-      if optionTestUnique $ARG_CSS; then
-        ARG_CSS=true
-      fi
-      ;;
-
-    # HTML minifier option
-    '--html' )
-      if optionTestUnique $ARG_HTML; then
-        ARG_HTML=true
-      fi
-      ;;
-
-    # PHP minifier option
-    '--php' )
-      if optionTestUnique $ARG_PHP; then
-        ARG_PHP=true
-      fi
-      ;;
-
-    # Tags file option
-    '-t' )
-      if optionTestUnique $ARG_T; then
-        ARG_T=true
-      fi
-      ;;
-
-      # Other options: path file, not supported option
-      * )
-        if [ -e "$I" ]; then
-          I=${I#./*}
-          if ! [ -z $ARG_T ] && [ -z $ARG_TAG ]; then
-            ARG_TAG=$I
-            tagFileTest
-          elif  [ -z $ARG_SRC ]; then
-            if [ -f "$I" ]; then
-              echo "The source must be a directory\n$HELP_MSG"
-              exit 3
-            fi
-            ARG_SRC=${I%*/}
-          else
-            ARG_DEST=${I%*/}
-            DEST_EXISTS=true
-          fi
-        else
-          if [ -z $ARG_SRC ]; then 
-            echo "The source must be an existing file\n$HELP_MSG"
-            exit 4
-          elif [ -z $ARG_DEST ]; then
-            ARG_DEST=${I%*/}
-          else
-            echo "The '$I' option is not supported\n$HELP_MSG"
-            exit 5
-          fi
+# Paramaters: arguments
+#
+checkArguments () {
+  for I in $*; do
+    case $I in
+      # Verbose option
+      '-v' )
+        if optionTestUnique $ARG_V; then
+          ARG_V=true
         fi
         ;;
-    esac
-done
+
+        # Force option
+      '-f' )
+        if optionTestUnique $ARG_F; then
+          ARG_F=true
+        fi
+        ;;
+
+      # CSS minifier option
+      '--css' )
+        if optionTestUnique $ARG_CSS; then
+          ARG_CSS=true
+        fi
+        ;;
+
+      # HTML minifier option
+      '--html' )
+        if optionTestUnique $ARG_HTML; then
+          ARG_HTML=true
+        fi
+        ;;
+
+      # PHP minifier option
+      '--php' )
+        if optionTestUnique $ARG_PHP; then
+          ARG_PHP=true
+        fi
+        ;;
+
+      # Tags file option
+      '-t' )
+        if optionTestUnique $ARG_T; then
+          ARG_T=true
+        fi
+        ;;
+
+      -[vft]* )
+        cutArguments $I
+        ;;
+
+        # Other options: path file, not supported option
+        * )
+          if [ -e "$I" ]; then
+            I=${I#./*}
+            if ! [ -z $ARG_T ] && [ -z $ARG_TAG ]; then
+              ARG_TAG=$I
+              tagFileTest
+            elif  [ -z $ARG_SRC ]; then
+              if [ -f "$I" ]; then
+                echo "The source must be a directory\n$HELP_MSG"
+                exit 3
+              fi
+              ARG_SRC=${I%*/}
+            else
+              ARG_DEST=${I%*/}
+              DEST_EXISTS=true
+            fi
+          else
+            if [ -z $ARG_SRC ]; then 
+              echo "The source must be an existing file\n$HELP_MSG"
+              exit 4
+            elif [ -z $ARG_DEST ]; then
+              ARG_DEST=${I%*/}
+            else
+              echo "The '$I' option is not supported\n$HELP_MSG"
+              exit 5
+            fi
+          fi
+          ;;
+      esac
+  done
+}
+
+checkArguments $*
 
 tagsFileExist
 pathsTest
@@ -248,7 +270,7 @@ removeTags () {
   if ! [ -z $ARG_TAG ] ; then
     for T in $TAGS ; do
       HTML_DATA=$(cat $1)
-      echo $HTML_DATA | sed -r -e "s/[ ]*(<$T[^>]*>)[ ]*/\1/gI" -e "s/[ ]*(<\/$T>)[ ]*/\1/gI" > $1
+      echo $HTML_DATA | sed -r "s/[ ]*(<[/]?$T[^>]*>)[ ]*/\1/gI" > $1
     done
   fi
 }
@@ -290,6 +312,10 @@ minifierCSS () {
 # PHP MINIFIER                                       #
 # -------------------------------------------------- #
 
+#
+# Minify a php file
+# Parameters: php filename
+#
 minifierPHP () {
   sed -r 's/^[ |\t]*\/\/.*//' $1 | tr '\n' ' ' | tr -s ' ' | perl -pe 's/<!--.*?-->//g' | perl -pe 's/\/\*.*?\/\*//g' | sed -r 's/\r|\t|\v//g' > $2
 
