@@ -25,6 +25,7 @@ OPTIONS
                 for confirmation of deletion
   --css         CSS files are minified
   --html        HTML files are minified
+  --php         PHP files are minified
   if none of the 2 previous options is present, the HTML and CSSfiles are minified
   -t            tags_file the "white space" characters preceding and following the
                 tags (opening or closing) listed in the "tags_file" are deleted'
@@ -142,6 +143,12 @@ for I in $*; do
       fi
       ;;
 
+    '--php' )
+      if optionTestUnique $ARG_PHP; then
+        ARG_PHP=true
+      fi
+      ;;
+
     '-t' )
       if optionTestUnique $ARG_T; then
         ARG_T=true
@@ -184,9 +191,10 @@ pathsTest
 userConfirmDelete
 
 # If none of the --css and --html arguments are passed, both types must be minified
-if [ -z $ARG_CSS ] && [ -z $ARG_HTML ]; then 
+if [ -z $ARG_CSS ] && [ -z $ARG_HTML ] && [ -z $ARG_PHP ]; then 
   ARG_CSS=true
   ARG_HTML=true
+  ARG_PHP=true
 fi
 
 # -------------------------------------------------- #
@@ -262,6 +270,27 @@ minifierCSS () {
 }
 
 # -------------------------------------------------- #
+# PHP MINIFIER                                       #
+# -------------------------------------------------- #
+
+minifierPHP () {
+  sed -r 's/^[ |\t]*\/\/.*//' $1 | tr '\n' ' ' | tr -s ' ' | perl -pe 's/<!--.*?-->//g' | perl -pe 's/\/\*.*?\/\*//g' | sed -r 's/\r|\t|\v//g' > $2
+
+  # Use tags file if the option -t is set
+  if ! [ -z $ARG_TAG ] ; then
+    for T in $TAGS ; do
+      HTML_DATA=$(cat $2)
+      echo $HTML_DATA | sed -r -e "s/[ ]*(<$T[^>]*>)[ ]*/\1/gI" -e "s/[ ]*(<\/$T>)[ ]*/\1/gI" > $2
+    done
+  fi
+
+  # Print size if the option -v is set
+  if ! [ -z $ARG_V ] ; then
+    getSize $1 $2 PHP
+  fi
+}
+
+# -------------------------------------------------- #
 # MINIFIER                                           #
 # -------------------------------------------------- #
 
@@ -281,9 +310,12 @@ minifyAll () {
       getType $I
       if ! [ -z $ARG_CSS ] && [ "$TYPE_FILE" = css ] ; then
         minifierCSS $I $DEST_FILE
-      fi
-      if ! [ -z $ARG_HTML ] && [ "$TYPE_FILE" = html ] ; then
+      elif ! [ -z $ARG_HTML ] && [ "$TYPE_FILE" = html ] ; then
         minifierHTML $I $DEST_FILE
+      elif ! [ -z $ARG_PHP ] && [ "$TYPE_FILE" = php ] ; then
+        minifierPHP $I $DEST_FILE
+      elif [ -f $I ] ; then
+        cp $I $DEST_FILE
       fi
     fi
   done
