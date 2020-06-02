@@ -2,6 +2,8 @@
 
 CLI minification tool fot HTML, CSS and PHP files.
 
+Shell script *(Système - L2, S4)*.
+
 ## How to use it
 
  - Download/Clone the repository
